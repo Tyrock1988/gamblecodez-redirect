@@ -1,6 +1,3 @@
-# FastAPI app for subdomain-based redirect system
-# + simple JSON-based admin dashboard (for Render)
-
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
 from typing import List
@@ -12,7 +9,6 @@ app = FastAPI()
 
 REDIRECT_FILE = "redirects.json"
 
-# Load or initialize redirect data
 def load_redirects():
     if not os.path.exists(REDIRECT_FILE):
         with open(REDIRECT_FILE, "w") as f:
@@ -24,12 +20,10 @@ def save_redirects(data):
     with open(REDIRECT_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
-# Data model
 class Redirect(BaseModel):
     subdomain: str
     url: str
 
-# Redirect handler for wildcard subdomains
 @app.middleware("http")
 async def redirect_middleware(request: Request, call_next):
     host = request.headers.get("host", "")
@@ -41,10 +35,8 @@ async def redirect_middleware(request: Request, call_next):
     match = next((r for r in redirects if r["subdomain"].lower() == subdomain), None)
     if match:
         return RedirectResponse(match["url"])
-
     return await call_next(request)
 
-# Admin dashboard (no auth yet)
 @app.get("/admin", response_class=HTMLResponse)
 def dashboard():
     redirects = load_redirects()
@@ -80,7 +72,6 @@ def delete_redirect(subdomain: str):
     save_redirects(redirects)
     return RedirectResponse("/admin", status_code=303)
 
-# Preload initial redirects
 INITIAL_REDIRECTS = [
     {"subdomain": "group", "url": "https://t.me/GambleCodezPrizeHub"},
     {"subdomain": "channel", "url": "https://t.me/GambleCodezDrops"},

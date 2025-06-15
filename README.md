@@ -1,3 +1,3 @@
 # GambleCodez Redirect Dashboard
 
-A FastAPI app hosted on Render for managing subdomain-based redirects.
+A FastAPI app deployed on Render to manage subdomain redirects for GambleCodez.com.
