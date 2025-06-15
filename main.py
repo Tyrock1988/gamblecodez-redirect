@@ -1,24 +1,37 @@
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
-from typing import List
 from pydantic import BaseModel
 import json
 import os
+import logging
 
 app = FastAPI()
 
 REDIRECT_FILE = "redirects.json"
+logger = logging.getLogger(__name__)
 
 def load_redirects():
+    """Load redirect mappings from the JSON file, creating it if it doesn’t exist."""
     if not os.path.exists(REDIRECT_FILE):
         with open(REDIRECT_FILE, "w") as f:
             json.dump([], f)
-    with open(REDIRECT_FILE) as f:
-        return json.load(f)
+    try:
+        with open(REDIRECT_FILE) as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in redirects file")
+        return []
+    except Exception as e:
+        logger.error(f"Error loading redirects: {e}")
+        return []
 
 def save_redirects(data):
-    with open(REDIRECT_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    """Save redirect mappings to the JSON file with error handling."""
+    try:
+        with open(REDIRECT_FILE, "w") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        logger.error(f"Error saving redirects: {e}")
 
 class Redirect(BaseModel):
     subdomain: str
@@ -26,11 +39,18 @@ class Redirect(BaseModel):
 
 @app.middleware("http")
 async def redirect_middleware(request: Request, call_next):
-    host = request.headers.get("host", "")
-    if not host or "gamblecodez.com" not in host:
+    """Handle subdomain redirects and root domain redirect."""
+    host = request.headers.get("host", "").lower()
+    # Only process requests for gamblecodez.com or its subdomains
+    if not host.endswith(".gamblecodez.com") and host != "gamblecodez.com":
         return await call_next(request)
 
-    subdomain = host.split(".")[0].lower()
+    # Redirect root domain and www to a specific URL
+    if host == "gamblecodez.com" or host == "www.gamblecodez.com":
+        return RedirectResponse("https://t.me/GambleCodezDrops")
+
+    # Extract subdomain and check redirect map
+    subdomain = host.split(".")[0]
     redirects = load_redirects()
     match = next((r for r in redirects if r["subdomain"].lower() == subdomain), None)
     if match:
@@ -39,6 +59,7 @@ async def redirect_middleware(request: Request, call_next):
 
 @app.get("/admin", response_class=HTMLResponse)
 def dashboard():
+    """Display the admin dashboard with current redirects."""
     redirects = load_redirects()
     html = """
     <html><head><title>GambleCodez Redirect Dashboard</title></head><body>
@@ -58,6 +79,7 @@ def dashboard():
 
 @app.post("/add")
 def add_redirect(subdomain: str = Form(...), url: str = Form(...)):
+    """Add a new redirect mapping."""
     redirects = load_redirects()
     if any(r["subdomain"] == subdomain for r in redirects):
         raise HTTPException(status_code=400, detail="Subdomain already exists")
@@ -67,6 +89,7 @@ def add_redirect(subdomain: str = Form(...), url: str = Form(...)):
 
 @app.get("/delete/{subdomain}")
 def delete_redirect(subdomain: str):
+    """Delete a redirect mapping by subdomain."""
     redirects = load_redirects()
     redirects = [r for r in redirects if r["subdomain"] != subdomain]
     save_redirects(redirects)
