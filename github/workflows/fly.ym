@@ -1,4 +1,0 @@
-- name: Deploy to Fly.io
-  run: flyctl deploy -a <gamblecodez-redirect> --remote-only
-  env:
-    FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
