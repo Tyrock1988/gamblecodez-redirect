@@ -1,41 +1,39 @@
+
 async function claim(site) {
-  const input = document.getElementById("bonusCode");
-  const tooltip = document.getElementById("clipboardMsg");
-  let code = input.value.trim();
+    const input = document.getElementById('codeInput');
+    const tooltipFallback = document.getElementById('tooltip-fallback');
+    tooltipFallback.classList.add('hidden');
+    let code = input.value.trim();
 
-  // Fallback to clipboard if input is empty
-  if (!code) {
-    try {
-      code = await navigator.clipboard.readText();
-      input.value = code; // Fill input for visibility
-      localStorage.setItem('lastCode', code);
-    } catch (err) {
-      tooltip.textContent = "❗ Please allow clipboard access or paste your code manually.";
-      tooltip.style.display = "block";
-      return;
+    if (!code) {
+        try {
+            const permission = await navigator.permissions.query({ name: "clipboard-read" });
+            if (permission.state === "granted" || permission.state === "prompt") {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    code = text.trim();
+                    localStorage.setItem("lastBonusCode", code);
+                }
+            } else {
+                tooltipFallback.classList.remove('hidden');
+                return;
+            }
+        } catch (e) {
+            tooltipFallback.classList.remove('hidden');
+            return;
+        }
     }
-  }
 
-  // If no code is provided (from input or clipboard), show alert
-  if (!code) {
-    alert('Please enter a bonus code');
-    return;
-  }
-
-  // Construct URL and open in new tab
-  let url = '';
-  if (site === 'chanced') {
-    url = `https://www.chanced.com/?rbc=${encodeURIComponent(code)}`;
-  } else if (site === 'punt') {
-    url = `https://www.punt.com/?rbc=${encodeURIComponent(code)}`;
-  }
-  window.open(url, '_blank');
+    if (code) {
+        const base = site === "chanced" ? "https://www.chanced.com/?rbc=" : "https://www.punt.com/?rbc=";
+        window.location.href = base + encodeURIComponent(code);
+    }
 }
 
-// Auto-fill from localStorage
+// Autofill last used code
 window.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("lastCode");
-  if (saved && !document.getElementById("bonusCode").value) {
-    document.getElementById("bonusCode").value = saved;
-  }
+    const lastCode = localStorage.getItem("lastBonusCode");
+    if (lastCode) {
+        document.getElementById("codeInput").value = lastCode;
+    }
 });
