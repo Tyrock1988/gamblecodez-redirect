@@ -1,31 +1,26 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>GambleCodez Bonus Claimer</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>GambleCodez Claim Portal</title>
+    <link rel="stylesheet" href="style.css"/>
+    <script defer src="script.js"></script>
 </head>
 <body>
     <div class="container">
-        <img src="banner.png" alt="GambleCodez Banner" class="banner"/>
-        <h1>Claim Your Bonus</h1>
-        <input type="text" id="bonusCode" placeholder="Enter Bonus Code..." />
-        <small id="tooltip" style="color:#f0c;">Tip: If empty, we'll use your clipboard code automatically!</small>
-        <div class="buttons" style="margin-top:10px;">
-            <button onclick="handleClaim('chanced')">Claim on Chanced</button>
-            <button onclick="handleClaim('punt')">Claim on Punt</button>
+        <img src="banner.png" alt="GambleCodez" class="banner"/>
+        <h1>🎁 Claim Your Bonus Code</h1>
+        <input id="codeInput" type="text" placeholder="Paste or auto-fill bonus code"/>
+        <div class="tooltip">Tip: If empty, we'll use your clipboard code automatically!</div>
+        <div class="buttons">
+            <button onclick="claim('chanced')">Claim at Chanced</button>
+            <button onclick="claim('punt')">Claim at Punt</button>
         </div>
-        <small id="clipboardMsg" style="display:none;color:red;margin-top:8px;"></small>
-        <footer>
-            <a href="https://www.chanced.com/?rbc=gamblecodez" target="_blank">Join Chanced</a> | 
-            <a href="https://www.punt.com/?rbc=gamblecodez" target="_blank">Join Punt</a>
-            <div class="socials">
-                <a href="https://t.me/GambleCodezDrops" target="_blank">Telegram Channel</a> |
-                <a href="https://t.me/GambleCodezPrizeHub" target="_blank">Telegram Community</a>
-            </div>
-        </footer>
+        <div id="tooltip-fallback" class="tooltip fallback hidden">
+            Please allow clipboard access or paste your code manually.
+        </div>
     </div>
-    <script src="script.js"></script>
 </body>
 </html>
